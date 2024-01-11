@@ -1,0 +1,11 @@
+launch:  
+  
+- node:  
+    pkg: 'turtlesim'  
+    exec: 'turtlesim_node'  
+    name: 'sim'  
+
+- node:
+    pkg: 'generic_turtlesim'
+    exec: 'generic_turtlesim'
+    name: 'generic_turtlesim'
