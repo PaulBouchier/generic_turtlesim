@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import Twist, TransformStamped
 from nav_msgs.msg import Odometry
 from turtlesim.msg import Pose
 from tf2_ros import TransformBroadcaster
@@ -19,21 +19,21 @@ does not conform completely to that convention - it uses a simplified custom
 message for odometry. This node transforms the simplified message into
 the canonical Odometry message and a tf transform.
 """
-class generic_turtlesim(Node):
+class GenericTurtlesim(Node):
 
     def __init__(self):
         super().__init__('generic_turtlesim')
         self.get_logger().info('Starting generic_turtlesim')
 
-        # set up subscription to turtle1/pose
+        # set up subscription to turtle1/pose and /cmd_vel
         self.pose_sub = self.create_subscription(
-            Pose,
-            '/turtle1/pose',
-            self.pose_listener_cb,
-            10)
+            Pose, '/turtle1/pose', self.pose_listener_cb, 10)
+        self.cmd_vel_sub = self.create_subscription(
+            Twist, '/cmd_vel', self.cmd_vel_listener_cb, 10)
 
-        # set up publication to /odom
+        # set up publication to /odom and /turtle1/cmd_vel
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
+        self.cmd_vel_pub = self.create_publisher(Twist, 'turtle1/cmd_vel', 10)
 
         # set up transform broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -74,12 +74,14 @@ class generic_turtlesim(Node):
 
         self.tf_broadcaster.sendTransform(t)
 
+    def cmd_vel_listener_cb(self, msg):
+        self.cmd_vel_pub.publish(msg)
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    generic_turtlesim = generic_turtlesim()
+    generic_turtlesim = GenericTurtlesim()
 
     rclpy.spin(generic_turtlesim)
 
