@@ -4,6 +4,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist, TransformStamped
 from nav_msgs.msg import Odometry
 from turtlesim.msg import Pose
+from scripted_bot_interfaces.msg import GenericTurtlesimDebug
 from tf2_ros import TransformBroadcaster
 import tf_transformations
 
@@ -31,9 +32,10 @@ class GenericTurtlesim(Node):
         self.cmd_vel_sub = self.create_subscription(
             Twist, '/cmd_vel', self.cmd_vel_listener_cb, 10)
 
-        # set up publication to /odom and /turtle1/cmd_vel
+        # set up publication to /odom and /turtle1/cmd_vel and debug msgs
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.cmd_vel_pub = self.create_publisher(Twist, 'turtle1/cmd_vel', 10)
+        self.debug_pub = self.create_publisher(GenericTurtlesimDebug, 'generic_turtlesim_debug', 10)
 
         # set up transform broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -73,6 +75,18 @@ class GenericTurtlesim(Node):
         t.transform.rotation.w = q_pose[3]
 
         self.tf_broadcaster.sendTransform(t)
+
+        # This debug publisher is an example of how to publish your own robot data.
+        # It uses the GenericTurtlesimDebug message defined in the scripted_bot_interfaces
+        # package
+        gts_debug = GenericTurtlesimDebug()
+        gts_debug.x = msg.x
+        gts_debug.y = msg.y
+        gts_debug.theta = msg.theta
+        gts_debug.linear_speed = msg.linear_velocity
+        gts_debug.angular_speed = msg.angular_velocity
+        # publish debug data
+        self.debug_pub.publish(gts_debug)
 
     def cmd_vel_listener_cb(self, msg):
         self.cmd_vel_pub.publish(msg)
