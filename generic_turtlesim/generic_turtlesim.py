@@ -6,7 +6,6 @@ from nav_msgs.msg import Odometry
 from turtlesim.msg import Pose
 from scripted_bot_interfaces.msg import GenericTurtlesimDebug
 from tf2_ros import TransformBroadcaster
-#from tf_transformations import quaternion
 import math
 import numpy as np
 
@@ -75,7 +74,6 @@ class GenericTurtlesim(Node):
         # linear & angular pose
         tb_odom.pose.pose.position.x = msg.x
         tb_odom.pose.pose.position.y = msg.y
-        # q_pose = tf_transformations.quaternion_from_euler(0.0, 0.0, msg.theta)
         q_pose = self.quaternion_from_euler(0.0, 0.0, msg.theta)
 
         tb_odom.pose.pose.orientation.x = q_pose[0]

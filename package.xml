@@ -12,7 +12,6 @@
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>turtlesim</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
-  <exec_depend>tf_transformations</exec_depend>
   <exec_depend>scripted_bot_interfaces</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
