@@ -6,7 +6,9 @@ from nav_msgs.msg import Odometry
 from turtlesim.msg import Pose
 from scripted_bot_interfaces.msg import GenericTurtlesimDebug
 from tf2_ros import TransformBroadcaster
-import tf_transformations
+#from tf_transformations import quaternion
+import math
+import numpy as np
 
 """
 This node attempts to make the turtlesim_node compatible with nodes that
@@ -40,6 +42,30 @@ class GenericTurtlesim(Node):
         # set up transform broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
     
+
+    def quaternion_from_euler(self, ai, aj, ak):
+        ai /= 2.0
+        aj /= 2.0
+        ak /= 2.0
+        ci = math.cos(ai)
+        si = math.sin(ai)
+        cj = math.cos(aj)
+        sj = math.sin(aj)
+        ck = math.cos(ak)
+        sk = math.sin(ak)
+        cc = ci*ck
+        cs = ci*sk
+        sc = si*ck
+        ss = si*sk
+
+        q = np.empty((4, ))
+        q[0] = cj*sc - sj*cs
+        q[1] = cj*ss + sj*cc
+        q[2] = cj*cs - sj*sc
+        q[3] = cj*cc + sj*ss
+
+        return q
+    
     def pose_listener_cb(self, msg):
         # received pose message, publish data in an Odometry msg
         tb_odom = Odometry()
@@ -49,7 +75,9 @@ class GenericTurtlesim(Node):
         # linear & angular pose
         tb_odom.pose.pose.position.x = msg.x
         tb_odom.pose.pose.position.y = msg.y
-        q_pose = tf_transformations.quaternion_from_euler(0, 0, msg.theta)
+        # q_pose = tf_transformations.quaternion_from_euler(0.0, 0.0, msg.theta)
+        q_pose = self.quaternion_from_euler(0.0, 0.0, msg.theta)
+
         tb_odom.pose.pose.orientation.x = q_pose[0]
         tb_odom.pose.pose.orientation.y = q_pose[1]
         tb_odom.pose.pose.orientation.z = q_pose[2]
