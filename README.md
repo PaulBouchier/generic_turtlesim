@@ -10,5 +10,6 @@ Odometry messages on /odom. It also publishes the transform between the
 odom frame and the base_link frame on /tf. The turtlebot simulator, turtlesim,
 does not conform completely to that convention - it uses a simplified custom
 message for odometry. This node transforms the simplified message into
-the canonical Odometry message and a tf transform.
+the canonical Odometry message and a tf transform. It also publishes a PoseStamped
+message on /map, which helps test apps that expect to work in the map frame
 

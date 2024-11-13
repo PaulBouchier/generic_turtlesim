@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
-from geometry_msgs.msg import Twist, TransformStamped
+from geometry_msgs.msg import Twist, TransformStamped, PoseStamped
 from nav_msgs.msg import Odometry
 from turtlesim.msg import Pose
 from scripted_bot_interfaces.msg import GenericTurtlesimDebug
@@ -14,12 +14,13 @@ This node attempts to make the turtlesim_node compatible with nodes that
 expect to interact with a canonical robot.
 
 A canonical robot accepts movement commands in the form of Twist messages
-on /cmd_vel, and reports its pose and velocity in the form of
+on /cmd_vel, and reports its pose and velocity derived from wheel encoders in the form of
 Odometry messages on /odom. It also publishes the transform between the
 odom frame and the base_link frame on /tf. The turtlebot simulator, turtlesim,
 does not conform completely to that convention - it uses a simplified custom
 message for odometry. This node transforms the simplified message into
-the canonical Odometry message and a tf transform.
+the canonical Odometry message and a tf transform and a PoseStamped message on /map.
+The map and odom frames are forced to be aligned.
 """
 class GenericTurtlesim(Node):
 
@@ -33,8 +34,9 @@ class GenericTurtlesim(Node):
         self.cmd_vel_sub = self.create_subscription(
             Twist, '/cmd_vel', self.cmd_vel_listener_cb, 10)
 
-        # set up publication to /odom and /turtle1/cmd_vel and debug msgs
+        # set up publication to /odom, /map and /turtle1/cmd_vel and debug msgs
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
+        self.map_pub = self.create_publisher(PoseStamped, 'map', 10)
         self.cmd_vel_pub = self.create_publisher(Twist, 'turtle1/cmd_vel', 10)
         self.debug_pub = self.create_publisher(GenericTurtlesimDebug, 'generic_turtlesim_debug', 10)
 
@@ -101,6 +103,19 @@ class GenericTurtlesim(Node):
         t.transform.rotation.w = q_pose[3]
 
         self.tf_broadcaster.sendTransform(t)
+
+        # publish pose on map topic
+        tb_map = PoseStamped()
+        tb_map.header.stamp = self.get_clock().now().to_msg()
+        tb_map.header.frame_id = 'map'
+        tb_map.pose.position.x = msg.x
+        tb_map.pose.position.y = msg.y
+        tb_map.pose.orientation.x = q_pose[0]
+        tb_map.pose.orientation.y = q_pose[1]
+        tb_map.pose.orientation.z = q_pose[2]
+        tb_map.pose.orientation.w = q_pose[3]
+
+        self.map_pub.publish(tb_map)
 
         # This debug publisher is an example of how to publish your own robot data.
         # It uses the GenericTurtlesimDebug message defined in the scripted_bot_interfaces
