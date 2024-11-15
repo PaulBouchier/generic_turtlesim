@@ -34,11 +34,14 @@ class GenericTurtlesim(Node):
         self.cmd_vel_sub = self.create_subscription(
             Twist, '/cmd_vel', self.cmd_vel_listener_cb, 10)
 
-        # set up publication to /odom, /map and /turtle1/cmd_vel and debug msgs
+        # set up publication to /odom, /map, /sim_gps and /turtle1/cmd_vel and debug msgs
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
-        self.map_pub = self.create_publisher(PoseStamped, 'map', 10)
+        self.map_pub = self.create_publisher(PoseStamped, 'map', 10)  # map publishes at incoming rate
+        self.sim_gps_pub = self.create_publisher(PoseStamped, 'sim_gps', 10)  # sim_gps publishes at a gps rate
         self.cmd_vel_pub = self.create_publisher(Twist, 'turtle1/cmd_vel', 10)
         self.debug_pub = self.create_publisher(GenericTurtlesimDebug, 'generic_turtlesim_debug', 10)
+
+        self.last_gps_pub_time = self.get_clock().now()
 
         # set up transform broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -116,6 +119,13 @@ class GenericTurtlesim(Node):
         tb_map.pose.orientation.w = q_pose[3]
 
         self.map_pub.publish(tb_map)
+
+        # publish slower on sim_gps topic
+        now = self.get_clock().now()
+        time_since_gps_pub = (now - self.last_gps_pub_time).nanoseconds / 1e9
+        if (time_since_gps_pub > 1):
+            self.sim_gps_pub.publish(tb_map)
+            self.last_gps_pub_time = now
 
         # This debug publisher is an example of how to publish your own robot data.
         # It uses the GenericTurtlesimDebug message defined in the scripted_bot_interfaces

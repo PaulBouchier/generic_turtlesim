@@ -1,0 +1,23 @@
+launch:  
+  
+- node:  
+    pkg: 'turtlesim'  
+    exec: 'turtlesim_node'  
+    name: 'sim'  
+
+- node:
+    pkg: 'generic_turtlesim'
+    exec: 'generic_turtlesim'
+    name: 'generic_turtlesim_gps'
+    remap:
+    -
+        from: '/map'
+        to: '/map_fast'
+    -
+        from: 'sim_gps'
+        to: 'utm'
+
+- node:
+    pkg: 'robot_hardware'
+    exec: 'fuse_nav_data'
+    name: 'fuse_nav_data'
